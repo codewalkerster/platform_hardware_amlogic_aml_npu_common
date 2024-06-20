@@ -399,6 +399,7 @@ typedef struct __aml_nn_config
     aml_forward_ctrl_t forward_ctrl;
     aml_compiler_args_t compiler_args;
     aml_hw_flag_t hw_flag;
+    int timeout_ms;
 } aml_config;
 
 typedef struct {
@@ -445,8 +446,8 @@ typedef struct {
     int i8_mac_cnt;
     int max_clk;
     int Gops;
-    _Bool kernel_vlc;
-    _Bool feature_vlc;
+    bool kernel_vlc;
+    bool feature_vlc;
     int cur_clk;
     unsigned long sram_base;
     int sram_size;
@@ -464,7 +465,7 @@ typedef struct {
 } aml_platform_info_t;
 
 typedef struct {
-    int32_t memory_size;    // memory size used by the loaded model
+    int64_t memory_size;    // memory size used by the loaded model
     int32_t axi_sram_size;  // axi sram size required by the loaded model
     int32_t num_layers;
     int64_t macc_count;
@@ -474,7 +475,7 @@ typedef struct {
 typedef struct {
     int32_t working_frequency;      // in MHz
     int32_t axi_working_frequency;  // in MHz
-    int32_t memory_size;            // memory size used by the device driver
+    int64_t memory_size;            // memory size used by the device driver
     int32_t axi_sram_size;          // axi sram size allocated for the device
     float tops;                     // TOPS
 } aml_dev_memory_info_t;

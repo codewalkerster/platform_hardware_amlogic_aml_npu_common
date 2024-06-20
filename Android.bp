@@ -84,31 +84,14 @@ cc_prebuilt_library_shared {
 }
 
 cc_prebuilt_library_shared {
-   name: "libGPUsdk",
+   name: "libAmlTFDelegate",
    vendor: true,
    arch: {
       arm: {
-         srcs: ["nnsdk/android/lib32/libGPUsdk.so"],
+         srcs: ["nnsdk/android/lib32/libAmlTFDelegate.so"],
       },
       arm64: {
-         srcs: ["nnsdk/android/lib64/libGPUsdk.so"],
-      },
-   },
-   check_elf_files: false,
-   strip: {
-            none:true,
-   },
-}
-
-cc_prebuilt_library_shared {
-   name: "libXNNPACKsdk",
-   vendor: true,
-   arch: {
-      arm: {
-         srcs: ["nnsdk/android/lib32/libXNNPACKsdk.so"],
-      },
-      arm64: {
-         srcs: ["nnsdk/android/lib64/libXNNPACKsdk.so"],
+         srcs: ["nnsdk/android/lib64/libAmlTFDelegate.so"],
       },
    },
    check_elf_files: false,
