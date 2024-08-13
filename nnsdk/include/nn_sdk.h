@@ -87,7 +87,9 @@ typedef enum _nn_buffer_format_e
     /*! \brief A 32 signed integer type of buffer data */
     NN_BUFFER_FORMAT_INT32      = 8,
     /*! \brief A 64 signed integer type of buffer data */
-    NN_BUFFER_FORMAT_INT64      = 10
+    NN_BUFFER_FORMAT_INT64      = 10,
+    /*! \brief A bool type of buffer data */
+    NN_BUFFER_FORMAT_BOOL       = 11,
 } nn_buffer_format_e;
 
 typedef enum _nn_buffer_quantize_format_e
@@ -565,7 +567,7 @@ typedef enum {
 typedef  struct __aml_memory_config_t
 {
     uint32_t               typeSize;
-    uint32_t               mem_size;
+    int64_t                mem_size;
     uint32_t               index;
     aml_mmu_type_t         mmu_type;
     aml_cache_type_t       cache_type;
