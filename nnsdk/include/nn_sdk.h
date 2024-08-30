@@ -27,6 +27,8 @@ extern "C" {
 #define ADDRESS_MAX_NUM             64
 #define MAX_TENSOR_NUM_DIMS         6
 #define INPUT_META_NUM              1
+#define DELEGATE_MAX_INPUT_NUM      10
+#define DELEGATE_MAX_OUTPUT_NUM     20
 
 /*=====================================================
 the common type for sdk api
@@ -432,8 +434,7 @@ typedef enum {
     AML_HARDWARE_VSI_UNIFY           = 0,
     AML_HARDWARE_VIPLITE             = 1,
     AML_HARDWARE_ADLA                = 2,
-    AML_HARDWARE_GPU                 = 3,
-    AML_HARDWARE_CPU                 = 4,
+    AML_HARDWARE_DELEGATE            = 3,
     AML_HARDWARE_MAX                 = 100,
 } aml_hw_type_t;
 
