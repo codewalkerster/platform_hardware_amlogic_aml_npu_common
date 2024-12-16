@@ -187,12 +187,23 @@ typedef enum {
     AML_OUTPUT_ORDER_NCHW         = 2,    //output format: nchw
 } aml_output_order_t;
 
+typedef struct __aml_kvcache_dynamic_val_t
+{
+    int32_t current_mask;
+} aml_kvcache_dynamic_val_t;
+
+typedef struct __kvCacheDynamicInfo_t {
+    bool                          update_kvcache_info_flag;
+    aml_kvcache_dynamic_val_t     kvcache_dynamic_val;
+} kvCacheDynamicInfo_t;
+
 typedef  struct __aml_invoke_info_t
 {
     int typeSize;
     int invoke_type; // 1: invoke_no_wait, 2: waitwithid
     int32_t timeout; //ms
     int64_t invoke_id;
+    kvCacheDynamicInfo_t kvcache_dynamic_info;
 } aml_invoke_info_t;
 
 typedef  struct __amlnn_module_out_data_t
@@ -271,6 +282,7 @@ typedef struct __nn_input
     unsigned char* input;
     amlnn_input_type input_type;
     input_info info;
+    int subgraph_index;
 }nn_input;
 
 typedef struct __assign_address
@@ -305,11 +317,221 @@ typedef enum {
     AML_WITHOUT_CACHE         = 1,
 } aml_cache_type_t;
 
+typedef enum {
+    AML_Add = 0,
+    AML_AveragePool2d = 1,
+    AML_Concatenation = 2,
+    AML_Conv2d = 3,
+    AML_DepthwiseConv2d = 4,
+    AML_DepthToSpace = 5,
+    AML_Dequantize = 6,
+    AML_EmbeddingLookup = 7,
+    AML_Floor = 8,
+    AML_FullyConnected = 9,
+    AML_HashtableLookup = 10,
+    AML_L2Normalization = 11,
+    AML_L2Pool2d = 12,
+    AML_LocalResponseNormalization = 13,
+    AML_Logistic = 14,
+    AML_LshProjection = 15,
+    AML_Lstm = 16,
+    AML_MaxPool2d = 17,
+    AML_Mul = 18,
+    AML_Relu = 19,
+    AML_ReluN1To1 = 20,
+    AML_Relu6 = 21,
+    AML_Reshape = 22,
+    AML_ResizeBilinear = 23,
+    AML_Rnn = 24,
+    AML_Softmax = 25,
+    AML_SpaceToDepth = 26,
+    AML_Svdf = 27,
+    AML_Tanh = 28,
+    AML_ConcatEmbeddings = 29,
+    AML_SkipGram = 30,
+    AML_Call = 31,
+    AML_Custom = 32,
+    AML_EmbeddingLookupSparse = 33,
+    AML_Pad = 34,
+    AML_UnidirectionalSequenceRnn = 35,
+    AML_Gather = 36,
+    AML_BatchToSpaceNd = 37,
+    AML_SpaceToBatchNd = 38,
+    AML_Transpose = 39,
+    AML_Mean = 40,
+    AML_Sub = 41,
+    AML_Div = 42,
+    AML_Squeeze = 43,
+    AML_UnidirectionalSequenceLstm = 44,
+    AML_StridedSlice = 45,
+    AML_BidirectionalSequenceRnn = 46,
+    AML_Exp = 47,
+    AML_TopkV2 = 48,
+    AML_Split = 49,
+    AML_LogSoftmax = 50,
+    AML_Delegate = 51,
+    AML_BidirectionalSequenceLstm = 52,
+    AML_Cast = 53,
+    AML_Prelu = 54,
+    AML_Maximum = 55,
+    AML_ArgMax = 56,
+    AML_Minimum = 57,
+    AML_Less = 58,
+    AML_Neg = 59,
+    AML_PadV2 = 60,
+    AML_Greater = 61,
+    AML_GreaterEqual = 62,
+    AML_LessEqual = 63,
+    AML_Select = 64,
+    AML_Slice = 65,
+    AML_Sin = 66,
+    AML_TransposeConv = 67,
+    AML_SparseToDense = 68,
+    AML_Tile = 69,
+    AML_ExpandDims = 70,
+    AML_Equal = 71,
+    AML_NotEqual = 72,
+    AML_Log = 73,
+    AML_Sum = 74,
+    AML_Sqrt = 75,
+    AML_Rsqrt = 76,
+    AML_Shape = 77,
+    AML_Pow = 78,
+    AML_ArgMin = 79,
+    AML_FakeQuant = 80,
+    AML_ReduceProd = 81,
+    AML_ReduceMax = 82,
+    AML_Pack = 83,
+    AML_LogicalOr = 84,
+    AML_OneHot = 85,
+    AML_LogicalAnd = 86,
+    AML_LogicalNot = 87,
+    AML_Unpack = 88,
+    AML_ReduceMin = 89,
+    AML_FloorDiv = 90,
+    AML_ReduceAny = 91,
+    AML_Square = 92,
+    AML_ZerosLike = 93,
+    AML_Fill = 94,
+    AML_FloorMod = 95,
+    AML_Range = 96,
+    AML_ResizeNearestNeighbor = 97,
+    AML_LeakyRelu = 98,
+    AML_SquaredDifference = 99,
+    AML_MirrorPad = 100,
+    AML_Abs = 101,
+    AML_SplitV = 102,
+    AML_Unique = 103,
+    AML_Ceil = 104,
+    AML_ReverseV2 = 105,
+    AML_AddN = 106,
+    AML_GatherNd = 107,
+    AML_Cos = 108,
+    AML_Where = 109,
+    AML_Rank = 110,
+    AML_Elu = 111,
+    AML_ReverseSequence = 112,
+    AML_MatrixDiag = 113,
+    AML_Quantize = 114,
+    AML_MatrixSetDiag = 115,
+    AML_Round = 116,
+    AML_HardSwish = 117,
+    AML_If = 118,
+    AML_While = 119,
+    AML_NonMaxSuppressionV4 = 120,
+    AML_NonMaxSuppressionV5 = 121,
+    AML_ScatterNd = 122,
+    AML_SelectV2 = 123,
+    AML_Densify = 124,
+    AML_SegmentSum = 125,
+    AML_BatchMatmul = 126,
+    AML_PlaceholderForGreaterOpCodes = 127,
+    AML_Cumsum = 128,
+    AML_CallOnce = 129,
+    AML_BroadcastTo = 130,
+    AML_Rfft2d = 131,
+    AML_Conv3d = 132,
+    AML_Imag = 133,
+    AML_Real = 134,
+    AML_ComplexAbs = 135,
+    AML_Hashtable = 136,
+    AML_HashtableFind = 137,
+    AML_HashtableImport = 138,
+    AML_HashtableSize = 139,
+    AML_ReduceAll = 140,
+    AML_Conv3dTranspose = 141,
+    AML_VarHandle = 142,
+    AML_ReadVariable = 143,
+    AML_AssignVariable = 144,
+    AML_BroadcastArgs = 145,
+    AML_RandomStandardNormal = 146,
+    AML_Bucketize = 147,
+    AML_RandomUniform = 148,
+    AML_Multinomial = 149,
+    AML_Gelu = 150,
+    AML_DynamicUpdateSlice = 151,
+    AML_Relu0To1 = 152,
+    AML_UnsortedSegmentProd = 153,
+    AML_UnsortedSegmentMax = 154,
+    AML_UnsortedSegmentSum = 155,
+    AML_Atan2 = 156,
+    AML_UnsortedSegmentMin = 157,
+    AML_Sign = 158,
+    AML_Bitcast = 159,
+    AML_BitwiseXor = 160,
+    AML_RightShift = 161,
+    AML_DetectionPostProcess = 256,
+    AML_Erf = 260,
+    AML_Hardware = 511,
+    AML_Unknown = 2147483647,
+    AML_MIN = AML_Add,
+    AML_MAX = AML_Unknown
+} aml_operator_t;
+
+typedef struct __aml_openmp_opt_t {
+    aml_operator_t     operator_type;
+    bool               enable_openmp;
+    bool               involve_all_ops;  // enable openmp for all operators.
+    int8_t             openmp_num;
+} aml_openmp_opt_t;
+
+typedef struct __aml_neon_opt_t {
+    aml_operator_t     operator_type;
+    bool               enable_neon;
+    bool               involve_all_ops;
+} aml_neon_opt_t;
+
+typedef struct __softOpInfo_t {
+    bool                  set_openmp_opt_flag;
+    int                   openmp_opt_num;
+    aml_openmp_opt_t*     openmp_opt;
+    bool                  set_neon_opt_flag;
+    int                   neon_opt_num;
+    aml_neon_opt_t*       neon_opt;
+} softOpInfo_t;
+
+typedef struct __aml_kvcache_opt_t {
+    int32_t            operator_index;
+    bool               enable_kvcache; // enable skipping invalid vector computations outside the range of ADLA_KVCACHE_DYNAMIC_VAL.current_mask.
+    bool               zero_out_invalid_value; // set output tensors partial values to zero outside the range of ADLA_KVCACHE_DYNAMIC_VAL.current_mask,
+                                               // When the software operator(enable skip) is followed by a operator(disable skip), it must be set to true to ensure that the result is correct.
+    int8_t             active_axis;
+    int32_t            active_axis_size;
+} aml_kvcache_opt_t;
+
+typedef struct __kvCacheInfo_t {
+    bool                  set_kvcache_opt_flag;
+    int                   kvcache_opt_num;
+    aml_kvcache_opt_t*    kvcache_opt;
+} kvCacheInfo_t;
+
 typedef struct __aml_forward_ctrl_t
 {
     aml_encore_id              enCoreId;       /* device target which running the seg*/
     int64_t                    invoke_id;
     int32_t                    timeout_ms;
+    softOpInfo_t               softop_info;
+    kvCacheInfo_t              kvcache_info;
 } aml_forward_ctrl_t;
 
 typedef enum __aml_model_type_t
@@ -627,6 +849,10 @@ int  aml_util_getProfileInfo(void *context, aml_profile_config_t* profile_data);
 int  aml_util_disableProfile(void *context, aml_profile_config_t* profile_data);
 
 int  aml_read_chip_info(aml_platform_info_t* platform_info);
+
+/*=========== support kvcache =======================*/
+int aml_util_setKvcacheopt(void *context, aml_kvcache_opt_t* info, int32_t info_size);
+int aml_util_updateKvcacheinfo(void *context, aml_kvcache_dynamic_val_t* info);
 
 #ifdef __cplusplus
 } //extern "C"
