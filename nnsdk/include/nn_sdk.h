@@ -27,8 +27,8 @@ extern "C" {
 #define ADDRESS_MAX_NUM             64
 #define MAX_TENSOR_NUM_DIMS         6
 #define INPUT_META_NUM              1
-#define DELEGATE_MAX_INPUT_NUM      10
-#define DELEGATE_MAX_OUTPUT_NUM     20
+#define DELEGATE_MAX_INPUT_NUM      128
+#define DELEGATE_MAX_OUTPUT_NUM     128
 
 /*=====================================================
 the common type for sdk api
@@ -69,6 +69,7 @@ typedef enum _amlnn_input_ {
     QTENSOR_RAW_DATA,
     BINARY_RAW_DATA,
     INPUT_DMA_DATA,
+    INPUT_DMA_SECURE_DATA,
     RAW_DATA_MAX
 } amlnn_input_type;
 
@@ -149,14 +150,17 @@ typedef enum {
 typedef enum {
     AML_OUTDATA_FLOAT32      = 0,
     AML_OUTDATA_RAW          = 1,
-    AML_OUTDATA_DMA          = 2
+    AML_OUTDATA_DMA          = 2,
+    AML_OUTDATA_DMA_SECURE   = 3
 } aml_output_format_t;
 
 typedef enum {
-    AML_NO_PERF            = 0,
-    AML_PERF_INFERENCE     = 1,
-    AML_PERF_OUTPUT_GET    = 2,
-    AML_PERF_OUTPUT_SET    = 3
+    AML_NO_PERF                  = 0,
+    AML_PERF_INFERENCE           = 1,
+    AML_PERF_OUTPUT_GET          = 2,
+    AML_PERF_OUTPUT_SET          = 3,
+    AML_PERF_RESET_TRANSFORMER   = 4,
+    AML_PERF_BREAK_TRANSFORMER   = 5
 } aml_perf_mode_t;
 
 typedef enum {
@@ -177,8 +181,10 @@ typedef enum {
 } aml_policy_type_t;
 
 typedef enum {
-    AML_IO_VIRTUAL      = 0,
-    AML_IO_PHYS         = 1,
+    AML_IO_VIRTUAL          = 0,
+    AML_IO_PHYS             = 1,
+    AML_IO_VIRTUAL_SECURE   = 2,
+    AML_IO_PHYS_SECURE      = 3
 } aml_io_format_t;
 
 typedef enum {
@@ -192,10 +198,17 @@ typedef struct __aml_kvcache_dynamic_val_t
     int32_t current_mask;
 } aml_kvcache_dynamic_val_t;
 
-typedef struct __kvCacheDynamicInfo_t {
+typedef struct __kvCacheDynamicInfo_t
+{
     bool                          update_kvcache_info_flag;
     aml_kvcache_dynamic_val_t     kvcache_dynamic_val;
 } kvCacheDynamicInfo_t;
+
+typedef struct __aml_transformer_model_info
+{
+    uint64_t eos_token;
+    int32_t max_sequence_length;
+} aml_transformer_model_info;
 
 typedef  struct __aml_invoke_info_t
 {
@@ -248,6 +261,7 @@ typedef struct out_buf
     unsigned char *buf;
     nn_buffer_params_t *param;
     aml_output_format_t out_format;
+    int output_valid_length;
 } outBuf_t;
 
 typedef struct __nnout
@@ -283,6 +297,7 @@ typedef struct __nn_input
     amlnn_input_type input_type;
     input_info info;
     int subgraph_index;
+    int input_valid_length;
 }nn_input;
 
 typedef struct __assign_address
@@ -510,6 +525,12 @@ typedef struct __softOpInfo_t {
     aml_neon_opt_t*       neon_opt;
 } softOpInfo_t;
 
+typedef enum __aml_kvcache_type_t
+{
+    KVCompute_Prune = 1,
+    KVTransformer_Accel = 2
+} aml_kvcache_type_t;
+
 typedef struct __aml_kvcache_opt_t {
     int32_t            operator_index;
     bool               enable_kvcache; // enable skipping invalid vector computations outside the range of ADLA_KVCACHE_DYNAMIC_VAL.current_mask.
@@ -531,6 +552,7 @@ typedef struct __aml_forward_ctrl_t
     int64_t                    invoke_id;
     int32_t                    timeout_ms;
     softOpInfo_t               softop_info;
+    aml_kvcache_type_t         kvcache_type;
     kvCacheInfo_t              kvcache_info;
 } aml_forward_ctrl_t;
 
@@ -593,6 +615,17 @@ typedef struct __aml_compiler_debug_options_t
     bool disable_memory_optimization;
 } aml_compiler_debug_options_t;
 
+typedef struct __aml_compiler_transformer_config
+{
+    uint64_t eos_token;
+    int32_t max_sequence_length;
+    int32_t freq_base;
+    float factor;
+    int32_t low_freq_factor;
+    int32_t high_freq_factor;
+    int32_t max_position_embeddings;
+} aml_compiler_transformer_config;
+
 typedef struct __aml_compiler_args_t
 {
     // int32_t batch_multiplier;
@@ -603,6 +636,7 @@ typedef struct __aml_compiler_args_t
     const aml_compiler_allocator_t* allocator;
     const aml_compiler_metadata_t* metadata;
     const aml_compiler_debug_options_t* debug_options;
+    const aml_compiler_transformer_config* transformer_config;
     const char* custom_option_path;
 } aml_compiler_args_t;
 
@@ -615,6 +649,7 @@ typedef enum __aml_hw_flag_t
 
 typedef struct __aml_nn_config
 {
+    bool secure_config;
     int typeSize;
     int length;
     const char *path;
@@ -638,6 +673,9 @@ typedef struct {
     float TF_scale;               /*as tf define,scale*/
     int TF_zeropoint;             /*as tf define,zeropoint*/
     char name[MAX_NAME_LENGTH];    /*not use,will used in future*/
+    unsigned int index;
+    unsigned int stride;
+    unsigned int size;
 } info_t;
 
 typedef struct {
@@ -718,8 +756,10 @@ typedef struct aml_profiling_ext_data
     uint64_t mem_alloced_umd;
     int64_t  mem_pool_size;  //-1:the limit base on the system
     uint64_t mem_pool_used;
+    int32_t us_elapsed_in_fixup_cmq;
     int32_t us_elapsed_in_hw_op;
     int32_t us_elapsed_in_sw_op;
+    int32_t invoke_has_error;
 } aml_profiling_ext_data_t;
 
 typedef struct aml_profiling_data
@@ -771,6 +811,8 @@ typedef enum {
 typedef enum {
     AML_VIRTUAL_ADDR              = 0,
     AML_PHYS_ADDR                 = 1,
+    AML_VIRTUAL_SECURE_ADDR       = 2,
+    AML_PHYS_SECURE_ADDR          = 3
 } aml_memory_type_t;
 
 typedef  struct __aml_memory_data_t
@@ -853,6 +895,9 @@ int  aml_read_chip_info(aml_platform_info_t* platform_info);
 /*=========== support kvcache =======================*/
 int aml_util_setKvcacheopt(void *context, aml_kvcache_opt_t* info, int32_t info_size);
 int aml_util_updateKvcacheinfo(void *context, aml_kvcache_dynamic_val_t* info);
+int aml_util_resetTransformer(void *context);
+int aml_util_breakTransformer(void *context);
+int aml_util_getTransformerModelInfo(void *context, aml_transformer_model_info* info);
 
 #ifdef __cplusplus
 } //extern "C"
