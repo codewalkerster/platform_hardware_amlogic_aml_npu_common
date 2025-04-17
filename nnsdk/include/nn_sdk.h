@@ -673,9 +673,6 @@ typedef struct {
     float TF_scale;               /*as tf define,scale*/
     int TF_zeropoint;             /*as tf define,zeropoint*/
     char name[MAX_NAME_LENGTH];    /*not use,will used in future*/
-    unsigned int index;
-    unsigned int stride;
-    unsigned int size;
 } info_t;
 
 typedef struct {
