@@ -70,6 +70,7 @@ typedef enum _amlnn_input_ {
     BINARY_RAW_DATA,
     INPUT_DMA_DATA,
     INPUT_DMA_SECURE_DATA,
+    NV12_RAW_DATA,
     RAW_DATA_MAX
 } amlnn_input_type;
 
@@ -661,6 +662,7 @@ typedef struct __aml_nn_config
     aml_compiler_args_t compiler_args;
     aml_hw_flag_t hw_flag;
     int timeout_ms;
+    const char *on_path;
 } aml_config;
 
 typedef struct {
